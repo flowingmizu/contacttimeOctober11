@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mizuverse Labs: Chlorine Contact Time</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0f1e2c;--panel:#0f2230;--panel2:#12293a;--line:#1d3f55;--edge:#23495f;
+  --teal:#46c2a8;--gold:#e3b341;--green:#5fd38a;--red:#e06a5c;--dye:#b78cf2;
+  --text:#dcefff;--muted:#8fb4cc;--dim:#5c8299;--water:#16425a;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1e2c;--panel:#0f2230;--panel2:#12293a;--line:#1d3f55;--edge:#23495f;
+  --text:#dcefff;--muted:#8fb4cc;--dim:#5c8299;--water:#16425a;}}
+:root[data-theme="dark"]{--bg:#0f1e2c;--panel:#0f2230;--panel2:#12293a;--text:#dcefff;}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Lexend',system-ui,-apple-system,'Segoe UI',sans-serif;font-weight:300;line-height:1.55;font-size:16px}
+h1,h2,h3{font-weight:500;line-height:1.2;margin:0 0 .5em}
+h1{font-size:1.25rem}
+h2{font-size:1.6rem;letter-spacing:-.01em}
+h3{font-size:1.1rem;color:var(--muted);font-weight:400}
+p{margin:0 0 .9em;max-width:70ch}
+b,strong{font-weight:500;color:#fff}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(15,30,44,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.bar{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 16px}
+.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.brand small{display:block;color:var(--dim);font-size:.78rem}
+.hbtn{background:var(--panel2);color:var(--text);border:1px solid var(--edge);border-radius:999px;padding:7px 14px;font-size:.88rem;white-space:nowrap}
+.hbtn:hover{border-color:var(--teal)}
+nav.steps{max-width:1100px;margin:0 auto;display:flex;gap:6px;overflow-x:auto;padding:0 16px 10px;scrollbar-width:none}
+nav.steps::-webkit-scrollbar{display:none}
+.step{flex:0 0 auto;background:transparent;border:1px solid var(--line);color:var(--dim);border-radius:8px;padding:5px 10px;font-size:.8rem}
+.step .n{display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--line);color:var(--muted);font-size:.7rem;line-height:18px;text-align:center;margin-right:6px}
+.step.open{color:var(--muted);border-color:var(--edge)}
+.step.done .n{background:var(--teal);color:var(--bg)}
+.step.cur{color:var(--text);border-color:var(--teal);background:rgba(70,194,168,.08)}
+.step:disabled{cursor:not-allowed;opacity:.5}
+
+main{max-width:1100px;margin:0 auto;padding:24px 16px 80px}
+.stage{display:none}
+.stage.show{display:block;animation:in .35s ease}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.stage.show{animation:none}}
+
+.panel{background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:20px;margin-bottom:16px}
+.panel.soft{background:var(--panel2);border-color:var(--line)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:16px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+.btn{background:var(--teal);color:#06231d;border:0;border-radius:10px;padding:11px 18px;font-weight:500}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--edge)}
+.btn.gold{background:var(--gold);color:#2a1d00}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.lead{font-size:1.05rem;color:var(--muted)}
+.tardi-says{display:flex;gap:12px;align-items:flex-start;background:var(--panel2);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:12px 14px;margin:12px 0}
+.tardi-says p{margin:0}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px;align-items:center;margin-bottom:22px}
+@media (max-width:820px){.hero{grid-template-columns:1fr}}
+.hero h2{font-size:2.3rem;font-weight:600;letter-spacing:-.02em}
+.formula{font-size:2.6rem;font-weight:600;color:var(--teal);letter-spacing:-.02em;margin:.2em 0 .3em}
+.formula span{color:var(--muted);font-weight:300}
+
+/* quiz */
+.q{font-size:1.1rem;font-weight:400;margin-bottom:12px}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px 14px}
+.opt:hover:not(:disabled){border-color:var(--teal)}
+.opt.right{border-color:var(--green);background:rgba(95,211,138,.12)}
+.opt.wrong{border-color:var(--red);background:rgba(224,106,92,.12)}
+.opt:disabled{cursor:default}
+.fb{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--panel2);border-left:3px solid var(--teal)}
+.fb.bad{border-left-color:var(--red)}
+.progress{color:var(--dim);font-size:.85rem;margin-bottom:8px}
+
+/* tank */
+.tankwrap{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px}
+canvas#tank{width:100%;height:auto;display:block}
+.seg{display:inline-flex;border:1px solid var(--edge);border-radius:10px;overflow:hidden}
+.seg button{background:transparent;color:var(--muted);border:0;padding:8px 12px;font-size:.88rem}
+.seg button.on{background:var(--teal);color:#06231d}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.stat .k{color:var(--dim);font-size:.75rem}
+.stat .v{font-size:1.2rem;font-weight:500}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{color:var(--muted);font-weight:400}
+.tscroll{overflow-x:auto}
+
+/* gauge */
+.gauge{height:12px;border-radius:6px;background:var(--line);overflow:hidden;display:flex}
+.gauge i{display:block;height:100%}
+.legend{display:flex;justify-content:space-between;font-size:.78rem;color:var(--dim);margin-top:4px}
+
+/* worked */
+.ex{border-left:3px solid var(--gold);padding-left:14px;margin-bottom:18px}
+.reveal{display:none;margin-top:8px;padding:10px 12px;background:var(--panel2);border-radius:8px}
+.reveal.show{display:block}
+.eq{font-size:1.15rem;color:var(--teal);font-weight:400}
+
+/* practice */
+.ansrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
+input[type=text],select{background:var(--panel2);color:var(--text);border:1px solid var(--edge);border-radius:10px;padding:10px 12px;font:inherit;min-width:0}
+input[type=text]{width:160px}
+
+/* challenge */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tab{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:9px 14px}
+.tab.on{border-color:var(--teal);color:var(--text)}
+.tab.done::after{content:" ✓";color:var(--green)}
+.tab:disabled{opacity:.45;cursor:not-allowed}
+.season-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:.82rem;color:var(--muted)}
+.ctl{margin:14px 0}
+.ctl label{display:flex;justify-content:space-between;color:var(--muted);font-size:.9rem;margin-bottom:6px}
+.ctl label b{font-size:1.1rem}
+input[type=range]{width:100%;accent-color:var(--teal)}
+.readouts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ro{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.ro .k{color:var(--dim);font-size:.78rem}
+.ro .v{font-size:1.35rem;font-weight:500}
+.ro .s{font-size:.8rem;color:var(--muted)}
+.ro.wide{grid-column:1/-1}
+.ctbig{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+.ctbig .v{font-size:2rem}
+.status{display:inline-block;border-radius:999px;padding:4px 12px;font-size:.85rem;font-weight:500}
+.st-opt{background:rgba(95,211,138,.15);color:var(--green)}
+.st-warn{background:rgba(227,179,65,.15);color:var(--gold)}
+.st-bad{background:rgba(224,106,92,.15);color:var(--red)}
+.note{font-size:.85rem;color:var(--gold);margin-top:8px;min-height:1.2em}
+.chartbox{position:relative;height:240px}
+
+/* modal + toast */
+.modal{position:fixed;inset:0;background:rgba(5,12,18,.75);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal.show{display:flex}
+.modal .card{background:var(--panel);border:1px solid var(--edge);border-radius:16px;max-width:560px;width:100%;padding:22px;max-height:88vh;overflow:auto}
+.scene{font-size:3rem;text-align:center;margin:4px 0 8px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--panel2);border:1px solid var(--teal);border-radius:12px;padding:10px 16px;z-index:60;display:none;max-width:90vw}
+.toast.show{display:block;animation:in .25s ease}
+
+/* lab shelf */
+.shelf{position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);right:16px;width:300px;max-width:calc(100vw - 32px);background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:14px;z-index:40;display:none}
+.shelf.show{display:block}
+.items{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.item{background:var(--panel2);border:1px solid var(--line);border-radius:10px;text-align:center;padding:8px 4px;font-size:.72rem;color:var(--dim)}
+.item .e{font-size:1.6rem;display:block;filter:grayscale(1);opacity:.35}
+.item.got{color:var(--text);border-color:var(--teal)}
+.item.got .e{filter:none;opacity:1}
+
+/* tour */
+.tour-hl{position:relative;z-index:45;box-shadow:0 0 0 3px var(--gold),0 0 0 9999px rgba(5,12,18,.6);border-radius:10px}
+.bubble{position:fixed;z-index:55;background:var(--gold);color:#2a1d00;border-radius:12px;padding:12px 14px;max-width:320px;display:none;font-weight:400}
+.bubble.show{display:block}
+.bubble .row{margin-top:8px}
+.bubble button{background:#2a1d00;color:var(--gold);border:0;border-radius:8px;padding:6px 12px}
+
+/* summary */
+.meter{margin:10px 0}
+.meter .t{display:flex;justify-content:space-between;font-size:.9rem;color:var(--muted)}
+.meter .g{height:10px;background:var(--line);border-radius:5px;overflow:hidden;margin-top:4px}
+.meter .g i{display:block;height:100%;background:var(--teal)}
+.qr{border:2px dashed var(--edge);border-radius:12px;width:200px;height:200px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--dim);font-size:.85rem;padding:12px;background:var(--panel2)}
+.badge{font-size:3.4rem}
+
+/* pitch overview */
+.pitch{display:none}
+.pitch.show{display:block;animation:in .35s ease}
+.p-hero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;align-items:center;margin:8px 0 26px}
+@media (max-width:680px){.p-hero{grid-template-columns:1fr}}
+.p-kicker{color:var(--teal);font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;font-weight:500;margin-bottom:6px}
+.p-hero h2{font-size:2.6rem;font-weight:600;letter-spacing:-.025em;margin-bottom:.3em}
+.p-tag{color:var(--gold);font-weight:400;margin:0 0 10px}
+.p-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px}
+@media (max-width:820px){.p-cols{grid-template-columns:1fr}}
+.p-card{background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:18px}
+.p-card .lbl{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.p-card h3{color:var(--text);font-weight:500;margin-bottom:.4em}
+.p-card p{margin:0;color:var(--muted);font-size:.95rem}
+.path{display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;margin:8px 0 6px}
+.mod{flex:1 1 150px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.mod .n{font-size:.75rem;color:var(--dim)}
+.mod b{display:block;font-size:.98rem}
+.mod.done{border-color:var(--edge)}
+.mod.done .n::after{content:" · built";color:var(--green)}
+.mod.here{border:2px solid var(--teal);background:rgba(70,194,168,.08)}
+.mod.here .n::after{content:" · you are here";color:var(--teal)}
+.mod.next{border-style:dashed;opacity:.7}
+.feat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:6px}
+@media (max-width:680px){.feat{grid-template-columns:1fr}}
+.feat div{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:.95rem;color:var(--muted)}
+.feat div b{display:block;color:var(--text);margin-bottom:2px}
+.p-cta{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 8px}
+.p-fine{font-size:.82rem;color:var(--dim)}
+.tourlink{background:none;border:0;color:var(--muted);padding:8px 4px;font-size:.92rem;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--edge)}
+.tourlink:hover{color:var(--teal)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div class="brand">
+      <span id="logoTardi"></span>
+      <div><h1>Chlorine Contact Time</h1><small>Mizuverse Labs · Module 4 · Disinfect</small></div>
+    </div>
+    <button class="hbtn" id="overviewBtn">Overview</button>
+    <button class="hbtn" id="labBtn">My Lab <span id="labCount" class="num">0/5</span></button>
+  </div>
+  <nav class="steps" id="steps" aria-label="Learning steps"></nav>
+</header>
+
+<div class="shelf" id="shelf" role="dialog" aria-label="My Lab">
+  <div class="row" style="justify-content:space-between"><b>My Lab shelf</b><span class="chip" id="poopCount">💩 0</span></div>
+  <div class="items" id="items"></div>
+  <p style="font-size:.8rem;color:var(--dim);margin:10px 0 0">Earn equipment by doing well in quizzes, practice and the seasonal challenge.</p>
+</div>
+
+<main>
+
+<!-- Pitch overview -->
+<section class="pitch" id="pitch" aria-labelledby="pitchTitle">
+  <div class="p-hero">
+    <div id="pitchTardi"></div>
+    <div>
+      <div class="p-kicker">Mizuverse Labs · Water treatment training</div>
+      <h2 id="pitchTitle">Practise the plant before you run the plant.</h2>
+      <p class="p-tag">Stay curious. Stay clear.</p>
+      <p class="lead" style="margin:0">Interactive simulators that take learners from lab bench math to real operator decisions, one connected water treatment story at a time.</p>
+    </div>
+  </div>
+
+  <div class="p-cols">
+    <div class="p-card"><div class="lbl">The problem</div><h3>Experience is retiring</h3><p>Experienced operators are retiring, and new operators rarely get a safe place to practise lab work and dosing decisions before they touch real equipment.</p></div>
+    <div class="p-card"><div class="lbl">The solution</div><h3>A virtual plant to practise in</h3><p>Learners run the math, see the process, make the call, and live with the consequences. Every module follows Observe → Experiment → Interpret → Decide.</p></div>
+    <div class="p-card"><div class="lbl">Who it's for</div><h3>The operator pipeline</h3><p>High school and trade school programs, community colleges, entry-level operators and utility workforce training.</p></div>
+  </div>
+
+  <div class="panel">
+    <h3>One river, one connected pathway</h3>
+    <p style="color:var(--muted);font-size:.95rem">The same seasonal source water runs through every module, so each decision builds on the last.</p>
+    <div class="path">
+      <div class="mod done"><span class="n">Module 1</span><b>Stock Solution</b></div>
+      <div class="mod done"><span class="n">Module 2</span><b>Alkalinity Titration</b></div>
+      <div class="mod done"><span class="n">Module 3</span><b>Jar Test</b></div>
+      <div class="mod here"><span class="n">Module 4</span><b>Chlorine Contact Time</b></div>
+      <div class="mod next"><span class="n">Roadmap</span><b>Chloramines · UV · Ozone · Distribution</b></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Inside this module</h3>
+    <div class="feat">
+      <div><b>Animated tracer study</b>See short-circuiting happen and why regulators credit T10, not the average.</div>
+      <div><b>Real operator math</b>HDT, T10, CT and feed rate with EPA baffling factors and fresh numbers every attempt.</div>
+      <div><b>Seasonal plant decisions</b>Set the chlorine dose for snowmelt, drought and storm water, then defend it.</div>
+      <div><b>Exam-style practice</b>15 questions modelled on operator certification prep, with a 70% pass mark.</div>
+    </div>
+  </div>
+
+  <div class="p-cta">
+    <button class="btn" id="pitchStart">Start the module</button>
+    <button class="tourlink" id="pitchDemo">or take a quick guided tour →</button>
+  </div>
+  <p class="p-fine">Educational practice only. Mizuverse Labs supplements hands-on laboratory and plant training and does not award certification.</p>
+</section>
+
+<!-- 0 Warm-up quiz -->
+<section class="stage" data-stage="0">
+  <div class="hero">
+    <div>
+      <h2>Is the water safe yet?</h2>
+      <p class="lead">Your water has been through coagulation, settling and filtration. Now it needs disinfection, and chlorine needs time to work. Operators prove it with one number.</p>
+      <div class="formula">CT <span>=</span> C <span>×</span> T<sub style="font-size:.5em">10</span></div>
+      <p style="color:var(--dim);font-size:.9rem">Continues from Stock Solution → Alkalinity Titration → Jar Test.</p>
+    </div>
+    <div class="panel" id="preQuiz"></div>
+  </div>
+</section>
+
+<!-- 1 Learn -->
+<section class="stage" data-stage="1">
+  <h2>Why some water leaves early</h2>
+  <p class="lead">A clearwell is not a queue. Without baffles, some water short-circuits from inlet to outlet and gets far less contact time than the average. Release a pulse of tracer dye and watch.</p>
+  <div class="grid2">
+    <div class="tankwrap">
+      <canvas id="tank" width="600" height="260" aria-label="Animated clearwell showing tracer dye moving from inlet to outlet"></canvas>
+      <div class="row" style="justify-content:space-between;margin-top:8px">
+        <div class="seg" role="group" aria-label="Tank type">
+          <button id="tkOpen" class="on">Unbaffled</button><button id="tkBaf">Serpentine baffles</button>
+        </div>
+        <button class="btn gold" id="tkGo">Release dye</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">First 10% out</div><div class="v num" id="tkT10">–</div></div>
+        <div class="stat"><div class="k">Average time</div><div class="v num" id="tkMean">–</div></div>
+        <div class="stat"><div class="k">T10 ÷ average</div><div class="v num" id="tkRatio">–</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <h3>T10 and the baffling factor</h3>
+        <p><b>T10</b> is the time it takes for the first 10% of water to pass through the basin. Regulators use T10, not the average, so that almost all water gets at least that much contact.</p>
+        <p class="eq">T10 = HDT × baffling factor</p>
+        <p style="font-size:.9rem;color:var(--muted)">HDT (hydraulic detention time) = volume ÷ flow. Real baffling factors come from tracer studies; the EPA guidance values are:</p>
+        <div class="tscroll"><table>
+          <tr><th>Condition</th><th>Factor</th><th>Description</th></tr>
+          <tr><td>Unbaffled</td><td class="num">0.1</td><td>No baffles, agitated, high inlet/outlet velocity</td></tr>
+          <tr><td>Poor</td><td class="num">0.3</td><td>Single or multiple unbaffled inlets and outlets</td></tr>
+          <tr><td>Average</td><td class="num">0.5</td><td>Baffled inlet or outlet, some intra-basin baffles</td></tr>
+          <tr><td>Superior</td><td class="num">0.7</td><td>Perforated inlet baffle, serpentine baffles</td></tr>
+          <tr><td>Perfect</td><td class="num">1.0</td><td>Plug flow, e.g. a long pipeline</td></tr>
+        </table></div>
+      </div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:16px">
+    <h3>Remember titration? pH decides how strong your chlorine is</h3>
+    <p>Free chlorine splits into <b>HOCl</b> (hypochlorous acid, the strong disinfectant) and <b>OCl⁻</b> (hypochlorite, roughly 80 times weaker). The higher the pH, the more of it is OCl⁻.</p>
+    <div class="ctl"><label>pH <b class="num" id="lpHv">7.5</b></label><input type="range" id="lpH" min="6" max="9" step="0.1" value="7.5"></div>
+    <div class="gauge"><i id="lH" style="background:var(--teal)"></i><i id="lO" style="background:var(--edge)"></i></div>
+    <div class="legend"><span>HOCl <b class="num" id="lHv"></b></span><span>OCl⁻ <b class="num" id="lOv"></b></span></div>
+  </div>
+  <div class="tardi-says"><span class="tsvg"></span><p>Cold water slows chlorine down too. That's why the CT you need goes up in winter and spring snowmelt.</p></div>
+  <button class="btn" data-next="2">Continue to worked math</button>
+</section>
+
+<!-- 2 Worked math -->
+<section class="stage" data-stage="2">
+  <h2>Worked math: one plant, three steps</h2>
+  <p class="lead">This is the same plant you'll run in the seasonal challenge. Try each step yourself, then reveal the working.</p>
+  <div class="panel" id="worked"></div>
+  <button class="btn" data-next="3">Continue to practice</button>
+</section>
+
+<!-- 3 Practice -->
+<section class="stage" data-stage="3">
+  <h2>Operator practice</h2>
+  <p class="lead">Ten problems with fresh numbers each time. Answers within 2% count as correct.</p>
+  <div class="panel" id="practice"></div>
+</section>
+
+<!-- 4 Challenge -->
+<section class="stage" data-stage="4">
+  <h2>Seasonal disinfection challenge</h2>
+  <p class="lead">Same river, same three seasons you titrated and jar tested. Set the chlorine dose, then defend it.</p>
+  <div class="tabs" id="seasonTabs"></div>
+  <div class="grid2">
+    <div>
+      <div class="panel" id="seasonCard"></div>
+      <div class="panel">
+        <div class="ctl" id="doseRow"><label>Chlorine dose <b class="num"><span id="doseV">2.0</span> mg/L</b></label>
+          <input type="range" id="dose" min="0.5" max="5" step="0.1" value="2.0"></div>
+        <div class="ctl"><label>Flow</label>
+          <div class="seg" role="group" aria-label="Flow"><button data-flow="avg">Average 1.2 MGD</button><button data-flow="peak" class="on">Peak 2.0 MGD</button></div></div>
+        <div class="ctl"><label for="level">Clearwell level</label>
+          <select id="level"><option value="min">Minimum (120,000 gal)</option><option value="normal">Normal (160,000 gal)</option><option value="high">High (200,000 gal)</option></select></div>
+        <div class="ctl"><label for="bf">Baffling (what-if)</label>
+          <select id="bf"><option value="0.1">Unbaffled 0.1</option><option value="0.3" selected>Poor 0.3, this plant's tracer result</option><option value="0.5">Average 0.5</option><option value="0.7">Superior 0.7</option></select></div>
+        <div class="note" id="viewNote"></div>
+        <button class="btn" id="submitBtn" style="margin-top:10px">Submit dose decision</button>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="readouts">
+          <div class="ro wide" id="ctBox">
+            <div class="k">Contact time check (Giardia, <span id="logTxt"></span>-log)</div>
+            <div class="ctbig"><div><div class="s">CT calculated</div><div class="v num" id="ctCalc">–</div></div>
+              <div><div class="s">CT required</div><div class="v num" id="ctReq" style="color:var(--muted)">–</div></div>
+              <div><span class="status" id="statusChip">–</span></div></div>
+          </div>
+          <div class="ro"><div class="k">HDT</div><div class="v num" id="hdt">–</div><div class="s">volume ÷ flow</div></div>
+          <div class="ro"><div class="k">T10</div><div class="v num" id="t10">–</div><div class="s">HDT × baffling</div></div>
+          <div class="ro"><div class="k">Residual at outlet (C)</div><div class="v num" id="cOut">–</div><div class="s" id="demandTxt"></div></div>
+          <div class="ro" id="custBox"><div class="k">Residual at first customer</div><div class="v num" id="cCust">–</div><div class="s">target ≥ 0.2 mg/L</div></div>
+          <div class="ro wide" id="hoclBox"><div class="k">Chlorine as HOCl at this pH</div>
+            <div class="gauge" style="margin-top:6px"><i id="gH" style="background:var(--teal)"></i><i id="gO" style="background:var(--edge)"></i></div>
+            <div class="legend"><span>HOCl <b class="num" id="gHv"></b></span><span>OCl⁻ <b class="num" id="gOv"></b></span></div></div>
+          <div class="ro wide"><div class="k">Disinfection by-product risk</div>
+            <div class="gauge" style="margin-top:6px"><i id="dbpBar"></i></div>
+            <div class="legend"><span>Low</span><span id="dbpTxt"></span><span>High</span></div></div>
+          <div class="ro wide"><div class="k">Chlorine feed rate</div><div class="v num" id="feed">–</div><div class="s">lb/day = dose (mg/L) × flow (MGD) × 8.34</div></div>
+        </div>
+      </div>
+      <div class="panel"><h3>Chlorine residual over time</h3><div class="chartbox"><canvas id="decayChart"></canvas></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 Compare -->
+<section class="stage" data-stage="5">
+  <h2>Compare the seasons</h2>
+  <p class="lead">Every result below is judged at the worst case: peak flow and minimum clearwell level.</p>
+  <div class="panel tscroll" id="cmpTable"></div>
+  <div class="panel"><h3>CT calculated vs CT required</h3><div class="chartbox"><canvas id="cmpChart"></canvas></div></div>
+  <div class="tardi-says"><span class="tsvg"></span><p id="cmpTardi"></p></div>
+  <button class="btn" data-next="6">Continue to final quiz</button>
+</section>
+
+<!-- 6 Final quiz -->
+<section class="stage" data-stage="6">
+  <h2>Final quiz</h2>
+  <p class="lead">Fifteen exam-style questions, drawn fresh from a larger bank each attempt. 70% (11/15) is a pass. Score 13 or more to earn the tardigrade badge.</p>
+  <div class="panel" id="finalQuiz"></div>
+</section>
+
+<!-- 7 Summary -->
+<section class="stage" data-stage="7">
+  <h2>Training summary</h2>
+  <div class="grid2">
+    <div class="panel" id="summary"></div>
+    <div class="panel soft">
+      <h3>Study notes</h3>
+      <p>Continue your practice with the Mizuverse note summary for this module.</p>
+      <div class="qr">QR code for the note summary goes here</div>
+      <p style="font-size:.85rem;color:var(--dim);margin-top:10px">This simulator is for educational practice. It does not replace hands-on laboratory or plant training and is not a certification.</p>
+      <button class="btn ghost" id="resetBtn">Start the module again</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div class="modal" id="modal"><div class="card" id="modalCard" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" role="status"></div>
+<div class="bubble" id="bubble"><div id="bubbleTxt"></div><div class="row"><button id="bubbleNext">Next</button><button id="bubbleEnd">End tour</button></div></div>
+
+<script>
+/* ============ CONFIG (all model constants; instructor to verify) ============ */
+const CONFIG = {
+  flowMGD: {avg:1.2, peak:2.0},
+  levels: {min:120000, normal:160000, high:200000},   // gallons
+  plantBF: 0.3,                // baffling factor from the plant's tracer study
+  giardiaLog: 0.5,             // log inactivation required from disinfection (3-log total, 2.5 credited to conventional filtration)
+  travelMin: 180,              // minutes from clearwell outlet to first customer
+  minCustomer: 0.2, mrdl: 4.0, // mg/L
+  dbpHigh: 7, dbpMod: 4,
+  seasons: {
+    spring:{name:'Spring Snowmelt', T:6,  pH:7.2, alk:30,  ntu:0.15, demand:0.8, k:0.002, kd:0.001, org:0.8,
+      blurb:'Cold, soft snowmelt. Your jar test needed a higher alum dose and longer settling. Filtered water is clean, but cold slows chlorine down.'},
+    summer:{name:'Summer Dry', T:24, pH:8.1, alk:110, ntu:0.08, demand:1.2, k:0.006, kd:0.004, org:1.0,
+      blurb:'Warm, low-turbidity water with high alkalinity from your titration. Chlorine works fast here, but pH 8.1 means less HOCl and warm pipes burn residual quickly.'},
+    autumn:{name:'Autumn Rain', T:14, pH:6.8, alk:25,  ntu:0.25, demand:1.8, k:0.005, kd:0.003, org:1.6,
+      blurb:'Storm runoff carries leaves and organic matter. Your jar test needed a pH buffer. Organics use up chlorine and raise disinfection by-product risk.'}
+  },
+  order:['spring','summer','autumn']
+};
+/* CT required for free chlorine, Giardia: EPA regression used in disinfection profiling guidance.
+   VERIFY against the SWTR Guidance Manual CT tables before release. */
+function ctReq(T,pH,C,logI){
+  C=Math.max(C,0.4); pH=Math.min(Math.max(pH,6),9);
+  if(T<12.5) return (0.353*logI)*(12.006+Math.exp(2.46-0.073*T+0.125*C+0.389*pH));
+  return (0.361*logI)*(-2.216+Math.exp(2.69-0.065*T+0.111*C+0.361*pH));
+}
+function hocl(pH,T=20){const K=T+273.15;const pKa=3000/K-10.0686+0.0253*K;return 1/(1+Math.pow(10,pH-pKa));}
+
+function model(sk,dose,flow,level,bf){
+  const s=CONFIG.seasons[sk], mgd=CONFIG.flowMGD[flow], gpm=mgd*1e6/1440, V=CONFIG.levels[level];
+  const hdt=V/gpm, t10=hdt*bf, c0=Math.max(0,dose-s.demand), C=c0*Math.exp(-s.k*hdt);
+  const ct=C*t10, req=ctReq(s.T,s.pH,C,CONFIG.giardiaLog), ratio=req>0?ct/req:0;
+  const cust=C*Math.exp(-s.kd*CONFIG.travelMin);
+  const dbp=dose*s.org*(0.6+s.T/30)*(1+hdt/240);
+  return {s,dose,mgd,gpm,V,hdt,bf,t10,c0,C,ct,req,ratio,cust,dbp,feed:dose*mgd*8.34,hocl:hocl(s.pH,s.T)};
+}
+function grade(r){
+  if(r.C<=0||r.ratio<1) return 'under';
+  if(r.cust<CONFIG.minCustomer) return 'lost';
+  if(r.dbp>CONFIG.dbpHigh||r.C>CONFIG.mrdl||r.cust>2) return 'over';
+  if(r.ratio>2) return 'wasteful';
+  return 'optimised';
+}
+const GRADES={
+  under:{e:'🚱',t:'CT failure',cls:'st-bad',pts:0,txt:'The plant did not achieve enough Giardia inactivation at peak flow. A real plant would have to notify the state, and a boil-water notice could follow.'},
+  lost:{e:'📉',t:'Residual lost in distribution',cls:'st-bad',pts:30,txt:'CT passed in the clearwell, but residual fell below 0.2 mg/L before the first customer. Bacteria can regrow in the pipes.'},
+  over:{e:'🧴',t:'Overdosed',cls:'st-bad',pts:30,txt:'The water is disinfected, but by-product risk and chlorine taste are too high. Customers complain and TTHM/HAA5 limits are at risk.'},
+  wasteful:{e:'💸',t:'Compliant but wasteful',cls:'st-warn',pts:60,txt:'CT is more than double what is required. The water is safe, but you are paying for extra chlorine and forming more by-products than needed.'},
+  optimised:{e:'🏅',t:'Optimised',cls:'st-opt',pts:100,txt:'CT met with a sensible margin, residual held to the first customer, and by-product risk kept low. Tardi approves.'}
+};
+
+/* ============ State ============ */
+const KEY='mizuverse_ct_v1';
+const STAGES=['Warm-up quiz','Learn','Worked math','Practice','Seasonal challenge','Compare seasons','Final quiz','Training summary'];
+const ITEMS={gloves:{e:'🧤',n:'Nitrile gloves'},dpd:{e:'🧪',n:'DPD test kit'},colorimeter:{e:'📟',n:'Colorimeter'},tracer:{e:'🟣',n:'Tracer dye'},bottle:{e:'🍶',n:'Sample bottle'}};
+function fresh(){return {stage:0,max:0,items:{},poop:0,pre:null,practice:null,seasons:{},final:null,seenPitch:false};}
+function load(){try{const v=localStorage.getItem(KEY);return v?Object.assign(fresh(),JSON.parse(v)):null}catch(e){return null}}
+function save(){if(demo.on)return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let S=load()||fresh();
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const fmt=(x,d=1)=>Number(x).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+/* ============ Tardi ============ */
+function tardi(w=56){return `<svg viewBox="0 0 120 90" width="${w}" height="${w*.75}" aria-hidden="true">
+<g fill="#f2c9a6" stroke="#7a4b3a" stroke-width="2.5" stroke-linejoin="round">
+<ellipse cx="30" cy="70" rx="7" ry="9"/><ellipse cx="50" cy="73" rx="7" ry="9"/><ellipse cx="70" cy="73" rx="7" ry="9"/><ellipse cx="88" cy="70" rx="7" ry="9"/>
+<path d="M14 50 Q14 22 55 20 Q100 18 108 46 Q110 68 82 68 L32 68 Q14 66 14 50Z"/></g>
+<path d="M40 24 Q36 46 40 66 M58 22 Q54 45 58 68 M76 22 Q72 45 76 68" stroke="#d4a888" fill="none" stroke-width="2"/>
+<circle cx="97" cy="38" r="3.4" fill="#2a1a14"/><circle cx="98" cy="37" r="1" fill="#fff"/>
+<ellipse cx="107" cy="50" rx="3" ry="3.6" fill="#7a4b3a"/><ellipse cx="90" cy="48" rx="4" ry="2.4" fill="#f0a49a" opacity=".7"/></svg>`}
+$('#logoTardi').innerHTML=tardi(46);
+$$('.tsvg').forEach(e=>e.innerHTML=tardi(52));
+
+/* ============ UI helpers ============ */
+function toast(msg){const t=$('#toast');t.innerHTML=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2800);}
+function award(k){
+  if(k==='poop'){S.poop++;toast('💩 A poop emoji joins your shelf. Try again for real equipment.');}
+  else if(!S.items[k]){S.items[k]=true;toast(`${ITEMS[k].e} Unlocked: <b>${ITEMS[k].n}</b>`);}
+  else toast(`${ITEMS[k].e} You already have the ${ITEMS[k].n}.`);
+  renderShelf();save();
+}
+function renderShelf(){
+  $('#items').innerHTML=Object.entries(ITEMS).map(([k,v])=>`<div class="item ${S.items[k]?'got':''}"><span class="e">${v.e}</span>${v.n}</div>`).join('');
+  $('#labCount').textContent=`${Object.keys(S.items).length}/5`;
+  $('#poopCount').textContent=`💩 ${S.poop}`;
+}
+$('#labBtn').onclick=()=>$('#shelf').classList.toggle('show');
+function modal(html){$('#modalCard').innerHTML=html;$('#modal').classList.add('show');}
+function closeModal(){$('#modal').classList.remove('show');}
+
+function renderSteps(){
+  $('#steps').innerHTML=STAGES.map((n,i)=>`<button class="step ${i<=S.max?'open':''} ${i<S.max?'done':''} ${i===S.stage?'cur':''}" data-go="${i}" ${i>S.max?'disabled':''}><span class="n">${i+1}</span>${n}</button>`).join('');
+  $$('[data-go]').forEach(b=>b.onclick=()=>go(+b.dataset.go));
+}
+function unlock(n){if(n>S.max){S.max=n;save();}renderSteps();}
+function showPitch(){
+  $('#pitch').classList.add('show');
+  $$('.stage').forEach(s=>s.classList.remove('show'));
+  $('#shelf').classList.remove('show');
+  renderSteps();window.scrollTo({top:0,behavior:'instant'});
+}
+function go(n){
+  if(n>S.max)return;
+  $('#pitch').classList.remove('show');
+  S.stage=n;save();
+  $$('.stage').forEach(s=>s.classList.toggle('show',+s.dataset.stage===n));
+  renderSteps();window.scrollTo({top:0,behavior:'instant'});
+  ({0:renderPre,1:initLearn,2:renderWorked,3:renderPractice,4:renderChallenge,5:renderCompare,6:renderFinal,7:renderSummary})[n]();
+}
+$$('[data-next]').forEach(b=>b.onclick=()=>{const n=+b.dataset.next;unlock(n);go(n);});
+
+/* ============ Quiz engine ============ */
+function runQuiz(el,qs,onDone){
+  let i=0,score=0;
+  const show=()=>{
+    const q=qs[i];const opts=shuffle(q.o.map((t,k)=>({t,ok:k===0})));
+    el.innerHTML=`<div class="progress">Question ${i+1} of ${qs.length}</div><div class="q">${q.q}</div><div class="opts">${opts.map((o,k)=>`<button class="opt" data-k="${k}">${o.t}</button>`).join('')}</div><div id="qfb"></div>`;
+    el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+      const o=opts[+b.dataset.k];if(o.ok)score++;
+      el.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(opts[k].ok)x.classList.add('right');});
+      if(!o.ok)b.classList.add('wrong');
+      el.querySelector('#qfb').innerHTML=`<div class="fb ${o.ok?'':'bad'}"><b>${o.ok?pick(['Correct.','Nice work.','Spot on.']):pick(['Not quite.','Close, but no.','Have another look.'])}</b> ${q.why}</div><div class="row" style="margin-top:12px"><button class="btn" id="qnext">${i<qs.length-1?'Next question':'See results'}</button></div>`;
+      el.querySelector('#qnext').onclick=()=>{i++;i<qs.length?show():onDone(score,qs.length);};
+    });
+  };show();
+}
+const PRE=[
+ {q:'What does CT stand for in disinfection?',o:['Concentration × time','Chlorine total','Contact turbidity','Coagulant × temperature'],why:'CT is the disinfectant residual concentration (mg/L) multiplied by contact time (minutes).'},
+ {q:'Which chlorine value goes into the CT calculation?',o:['The residual measured at the end of the contact basin','The dose added at the start','The chlorine demand','The average of dose and residual'],why:'Chlorine is consumed as it works. Only the residual left at the outlet counts, which is the conservative choice.'},
+ {q:'Which form of free chlorine is the stronger disinfectant?',o:['HOCl (hypochlorous acid)','OCl⁻ (hypochlorite ion)','Cl⁻ (chloride)','They are equally strong'],why:'HOCl is roughly 80 times more effective than OCl⁻, and lower pH favours HOCl.'}
+];
+const FINAL=[
+ {q:'Why is CT compliance calculated at peak hourly flow?',o:['Peak flow gives the shortest contact time, the worst case','Peak flow uses the most chlorine','Peak flow has the lowest turbidity','It is the easiest flow to measure'],why:'Higher flow means water moves through faster. Regulators want proof the plant is safe at its worst moment.'},
+ {q:'Why use the minimum clearwell operating level?',o:['Less volume means less detention time','It holds more chlorine','It reduces by-products','Tracer tests require it'],why:'HDT = volume ÷ flow, so the lowest level gives the shortest time.'},
+ {q:'What does T10 represent?',o:['Time for the first 10% of water to pass through the basin','10% of the detention time','Time for chlorine to drop by 10%','Ten minutes of contact'],why:'T10 is the conservative contact time: 90% of the water stays longer than this.'},
+ {q:'An unbaffled clearwell typically has a baffling factor of:',o:['0.1','0.5','0.7','1.0'],why:'Without baffles, short-circuiting is severe, so only a tenth of HDT is credited.'},
+ {q:'Water temperature drops from 15 °C to 5 °C. What happens to CT required?',o:['It increases','It decreases','It stays the same','It depends only on turbidity'],why:'Disinfection reactions slow in cold water, so more CT is needed for the same inactivation.'},
+ {q:'pH rises from 7.0 to 8.5. What happens?',o:['Less chlorine is HOCl, so more CT is required','More chlorine becomes HOCl','Chlorine demand disappears','CT required drops'],why:'Above about pH 7.5 most free chlorine is the weaker OCl⁻ form. This links straight back to your titration results.'},
+ {q:'What is the main risk of overdosing chlorine?',o:['More disinfection by-products such as TTHMs and HAA5s','Less Giardia inactivation','Higher turbidity','Lower alkalinity readings'],why:'Chlorine reacts with natural organic matter to form regulated by-products. More is not automatically safer.'},
+ {q:'In the Summer Dry scenario, what made dosing tricky?',o:['Warm water used up residual before the first customer','Cold water slowed disinfection','Turbidity was too high to filter','Alkalinity was too low'],why:'CT was easy to meet in warm water, but fast decay meant the residual had to be high enough to last through distribution.'},
+ {q:'Why does Autumn Rain need the most careful chlorine dosing?',o:['Organics raise chlorine demand and by-product risk','The water is too cold','pH is too high','Flow is lower in autumn'],why:'Storm runoff brings organic matter that consumes chlorine and forms by-products, leaving a narrow safe window.'},
+ {q:'Which formula gives the chlorine feed rate?',o:['lb/day = dose (mg/L) × flow (MGD) × 8.34','lb/day = CT × flow','lb/day = dose × T10','lb/day = residual × 8.34'],why:'It is the same plant-scale formula you used for alum in the jar test module.'},
+ {q:'How does good filtration (from the jar test) help disinfection?',o:['Particles can shield microorganisms from chlorine','Filtration adds chlorine','Filtration raises pH','It increases T10'],why:'Low turbidity means fewer hiding places for pathogens, which is why filtration earns inactivation credit.'},
+ {q:'A clearwell has CT calculated 32 and CT required 28. Is it compliant?',o:['Yes, CT calculated is at least CT required','No, it must be double','No, CT required must be higher','Only if pH is below 7'],why:'Compliance means CT calculated ≥ CT required. A modest margin is ideal.'},
+ {q:'A clearwell holds 250,000 gal at minimum level. Peak flow is 1,500 gpm and the baffling factor is 0.5. What is T10?',o:['83.3 min','166.7 min','50.0 min','125.0 min'],why:'HDT = 250,000 ÷ 1,500 = 166.7 min. T10 = 166.7 × 0.5 = 83.3 min.'},
+ {q:'The free chlorine residual at the clearwell outlet is 1.2 mg/L and T10 is 25 min. What is CT?',o:['30 mg·min/L','20.8 mg·min/L','26.2 mg·min/L','2.4 mg·min/L'],why:'CT = C × T10 = 1.2 × 25 = 30 mg·min/L.'},
+ {q:'A plant treats 3.0 MGD with a chlorine dose of 2.5 mg/L. What is the chlorine feed rate?',o:['62.6 lb/day','7.5 lb/day','25.0 lb/day','125.1 lb/day'],why:'lb/day = 2.5 × 3.0 × 8.34 = 62.6 lb/day.'},
+ {q:'You need 40 lb/day of available chlorine. How many pounds per day of 65% calcium hypochlorite (HTH) must you feed?',o:['61.5 lb/day','26.0 lb/day','40.0 lb/day','105.0 lb/day'],why:'Divide by the strength: 40 ÷ 0.65 = 61.5 lb/day. Multiplying by 0.65 is a classic exam trap.'},
+ {q:'Chlorine dose is 3.0 mg/L and the measured residual is 0.8 mg/L. What is the chlorine demand?',o:['2.2 mg/L','3.8 mg/L','0.8 mg/L','2.4 mg/L'],why:'Demand = dose − residual = 3.0 − 0.8 = 2.2 mg/L.'},
+ {q:'A sample reads 2.0 mg/L total chlorine and 1.6 mg/L free chlorine. What is the combined chlorine residual?',o:['0.4 mg/L','3.6 mg/L','1.6 mg/L','1.25 mg/L'],why:'Combined = total − free = 2.0 − 1.6 = 0.4 mg/L. Combined chlorine is mostly chloramines.'},
+ {q:'In breakpoint chlorination, chlorine added beyond the breakpoint appears mainly as:',o:['Free available chlorine','Combined chlorine (chloramines)','Chloride ions','Trihalomethanes'],why:'Past the breakpoint, ammonia and other demand are satisfied, so added chlorine shows up as free residual.'},
+ {q:'Which method is most commonly used in the field to measure chlorine residual?',o:['DPD colorimetric test','Jar test','Turbidimeter reading','Imhoff cone'],why:'DPD turns pink in proportion to chlorine and is read on a colorimeter. It measures free and total chlorine.'},
+ {q:'Compared with free chlorine, monochloramine needs CT values that are:',o:['Much higher, because it is a weaker disinfectant','About the same','Much lower','Zero for Giardia'],why:'Chloramines are better at lasting in distribution but are far weaker disinfectants, so their CT requirements are much larger.'},
+ {q:'What is the main purpose of a tracer study on a clearwell?',o:['To measure T10 and set the baffling factor','To measure chlorine demand','To check filter turbidity','To calibrate the chlorinator'],why:'A tracer pulse shows when the first 10% of water reaches the outlet, which sets the credited contact time.'},
+ {q:'The maximum residual disinfectant level (MRDL) for chlorine is:',o:['4.0 mg/L as Cl₂','0.2 mg/L','1.0 mg/L','10 mg/L'],why:'The EPA MRDL for chlorine is 4.0 mg/L as Cl₂, measured as a running annual average.'},
+ {q:'Which pathogen is highly resistant to chlorine, so plants rely on filtration or UV to control it?',o:['Cryptosporidium','Giardia','E. coli','Most viruses'],why:'Cryptosporidium oocysts barely respond to normal chlorine doses, which is why filtration and UV are so important.'},
+ {q:'A 3-log inactivation means what percentage of the organisms are inactivated?',o:['99.9%','99%','99.99%','30%'],why:'Each log is a factor of 10: 1-log = 90%, 2-log = 99%, 3-log = 99.9%.'},
+ {q:'Under the Surface Water Treatment Rule, a filtered system must achieve at least:',o:['3-log Giardia and 4-log virus removal/inactivation','2-log Giardia and 2-log virus','4-log Giardia and 3-log virus','1-log of each'],why:'Filtration earns part of the credit; disinfection (CT) must supply the rest.'},
+ {q:'For free chlorine, Giardia usually controls the CT requirement rather than viruses. Why?',o:['Viruses need far less CT with free chlorine than Giardia does','Viruses are not regulated','Viruses are removed completely by filtration','Giardia is easier to kill'],why:'Free chlorine inactivates viruses quickly, so if Giardia CT is met, the virus requirement is normally met too.'}
+];
+
+/* ============ Stage 0 ============ */
+function renderPre(){
+  const el=$('#preQuiz');
+  if(S.pre!=null){el.innerHTML=`<h3>Warm-up done</h3><p>You scored <b>${S.pre}/3</b>.</p><button class="btn" id="preGo">Continue to Learn</button>`;$('#preGo').onclick=()=>{unlock(1);go(1);};return;}
+  el.innerHTML=`<h3>Warm-up: three quick questions</h3><p>Get all three right to earn a DPD chlorine test kit.</p><button class="btn" id="preStart">Start warm-up</button>`;
+  $('#preStart').onclick=()=>runQuiz(el,PRE,(sc)=>{
+    S.pre=sc;award(sc===3?'dpd':sc===2?'gloves':'poop');
+    el.innerHTML=`<h3>${sc}/3</h3><p>${sc===3?'Perfect. Your DPD kit is on the shelf.':sc===2?'Good start. Gloves for you.':'That\'s fine, the Learn stage covers all of this.'}</p><button class="btn" id="preGo">Continue to Learn</button>`;
+    unlock(1);$('#preGo').onclick=()=>go(1);
+  });
+}
+
+/* ============ Stage 1: tank animation ============ */
+const TK={mode:'open',parts:[],t:0,raf:0,exits:[],ctx:null};
+function initLearn(){
+  const c=$('#tank');if(!TK.ctx){const d=window.devicePixelRatio||1;c.width=600*d;c.height=260*d;TK.ctx=c.getContext('2d');TK.ctx.scale(d,d);}
+  drawTank();updLearnPH();
+}
+function rnd(a,b){return a+Math.random()*(b-a)}
+function buildParts(){
+  const P=[];
+  const serp=[[40,62],[105,62],[105,205],[235,205],[235,55],[365,55],[365,205],[495,205],[495,62],[560,62]];
+  for(let i=0;i<220;i++){
+    let pts,sp=1;
+    if(TK.mode==='open'){
+      const n=Math.random()<0.3?0:3+Math.floor(Math.random()*5);
+      pts=[[40,130+rnd(-12,12)]];for(let k=0;k<n;k++)pts.push([rnd(70,530),rnd(55,205)]);pts.push([560,130+rnd(-12,12)]);if(n>0)sp=rnd(.45,.85);
+    }else{
+      pts=serp.map((p,k)=>k===0||k===serp.length-1?[p[0],p[1]+rnd(-6,6)]:[p[0]+rnd(-14,14),p[1]+rnd(-10,10)]);sp=1+rnd(-.07,.07);
+    }
+    const cum=[0];for(let k=1;k<pts.length;k++)cum.push(cum[k-1]+Math.hypot(pts[k][0]-pts[k-1][0],pts[k][1]-pts[k-1][1]));
+    P.push({pts,cum,len:cum[cum.length-1],sp,out:false,delay:rnd(0,25)});
+  }
+  return P;
+}
+function posAt(p,d){const c=p.cum;let k=1;while(k<c.length-1&&c[k]<d)k++;const f=(d-c[k-1])/(c[k]-c[k-1]||1);return[p.pts[k-1][0]+(p.pts[k][0]-p.pts[k-1][0])*f,p.pts[k-1][1]+(p.pts[k][1]-p.pts[k-1][1])*f];}
+function drawTank(){
+  const x=TK.ctx;if(!x)return;x.clearRect(0,0,600,260);
+  x.fillStyle='#16425a';x.strokeStyle='#46c2a8';x.lineWidth=2;
+  x.beginPath();x.roundRect(40,40,520,180,10);x.fill();x.stroke();
+  const iy=TK.mode==='open'?130:62;
+  x.fillStyle='#23495f';x.fillRect(0,iy-10,42,20);x.fillRect(558,iy-10,42,20);
+  x.fillStyle='#8fb4cc';x.font='12px Lexend, sans-serif';x.fillText('Inlet',4,iy-16);x.fillText('Outlet',556,iy-16);
+  if(TK.mode==='baf'){x.fillStyle='#0f2230';x.strokeStyle='#5c8299';[[166,40,8,150],[296,70,8,150],[426,40,8,150]].forEach(r=>{x.fillRect(...r);x.strokeRect(...r);});}
+  x.fillStyle='#b78cf2';
+  TK.parts.forEach(p=>{const d=(TK.t-p.delay)*(TK.mode==="open"?9:5)*p.sp;if(d<=0||p.out)return;const[a,b]=posAt(p,Math.min(d,p.len));x.globalAlpha=.85;x.beginPath();x.arc(a,b,2.6,0,7);x.fill();});
+  x.globalAlpha=1;
+}
+function stepTank(){
+  TK.t+=1;let all=true;
+  TK.parts.forEach(p=>{if(p.out)return;const d=(TK.t-p.delay)*(TK.mode==="open"?9:5)*p.sp;if(d>=p.len){p.out=true;TK.exits.push(TK.t);}else all=false;});
+  drawTank();
+  const n=TK.parts.length,secs=f=>fmt(f/60,1)+' s';
+  if(TK.exits.length>=n*.1)$('#tkT10').textContent=secs(TK.exits[Math.ceil(n*.1)-1]);
+  if(all){const mean=TK.exits.reduce((a,b)=>a+b,0)/n;$('#tkMean').textContent=secs(mean);$('#tkRatio').textContent=fmt(TK.exits[Math.ceil(n*.1)-1]/mean,2);
+    toast(TK.mode==='open'?'Short-circuiting: the first 10% escaped long before the average.':'Baffles force every parcel along a similar path. T10 is much closer to the average.');
+    $('#tkGo').disabled=false;return;}
+  TK.raf=requestAnimationFrame(stepTank);
+}
+function setTank(m){cancelAnimationFrame(TK.raf);TK.mode=m;TK.parts=[];TK.t=0;$('#tkOpen').classList.toggle('on',m==='open');$('#tkBaf').classList.toggle('on',m==='baf');['#tkT10','#tkMean','#tkRatio'].forEach(s=>$(s).textContent='–');$('#tkGo').disabled=false;drawTank();}
+$('#tkOpen').onclick=()=>setTank('open');$('#tkBaf').onclick=()=>setTank('baf');
+$('#tkGo').onclick=()=>{cancelAnimationFrame(TK.raf);TK.parts=buildParts();TK.t=0;TK.exits=[];['#tkT10','#tkMean','#tkRatio'].forEach(s=>$(s).textContent='–');$('#tkGo').disabled=true;stepTank();};
+function updLearnPH(){const p=+$('#lpH').value,h=hocl(p,20)*100;$('#lpHv').textContent=p.toFixed(1);$('#lH').style.width=h+'%';$('#lO').style.width=(100-h)+'%';$('#lHv').textContent=fmt(h,0)+'%';$('#lOv').textContent=fmt(100-h,0)+'%';}
+$('#lpH').oninput=updLearnPH;
+
+/* ============ Stage 2: worked ============ */
+function renderWorked(){
+  const r=model('spring',2.1,'peak','min',CONFIG.plantBF);
+  $('#worked').innerHTML=`
+  <div class="ex"><h3>1. Hydraulic detention time</h3>
+   <p>The clearwell at minimum level holds <b>120,000 gal</b>. Peak hourly flow is <b>2.0 MGD</b>. What is HDT in minutes?</p>
+   <button class="btn ghost" data-rv="w1">Show working</button>
+   <div class="reveal" id="w1"><p>Convert flow: 2.0 × 1,000,000 ÷ 1,440 = <b>${fmt(r.gpm,0)} gpm</b></p><p class="eq">HDT = 120,000 ÷ ${fmt(r.gpm,0)} = ${fmt(r.hdt,1)} min</p></div></div>
+  <div class="ex"><h3>2. T10</h3>
+   <p>A tracer study rated this clearwell <b>poor (0.3)</b>. What is T10?</p>
+   <button class="btn ghost" data-rv="w2">Show working</button>
+   <div class="reveal" id="w2"><p class="eq">T10 = ${fmt(r.hdt,1)} × 0.3 = ${fmt(r.t10,1)} min</p><p>Only ${fmt(r.t10,1)} of the ${fmt(r.hdt,1)} minutes can be credited because of short-circuiting.</p></div></div>
+  <div class="ex"><h3>3. CT calculated vs CT required</h3>
+   <p>In Spring Snowmelt (6 °C, pH 7.2), the outlet residual is <b>${fmt(r.C,2)} mg/L</b>. The CT table requires <b>${fmt(r.req,1)} mg·min/L</b> for ${CONFIG.giardiaLog}-log Giardia. Does the plant pass?</p>
+   <button class="btn ghost" data-rv="w3">Show working</button>
+   <div class="reveal" id="w3"><p class="eq">CT = ${fmt(r.C,2)} × ${fmt(r.t10,1)} = ${fmt(r.ct,1)} mg·min/L</p><p>${r.ct>=r.req?'Pass':'Fail'}: ${fmt(r.ct,1)} ${r.ct>=r.req?'≥':'<'} ${fmt(r.req,1)}. Ratio ${fmt(r.ratio,2)}, a small but genuine margin. Notice how cold water makes this harder than it looks.</p></div></div>`;
+  $$('[data-rv]').forEach(b=>b.onclick=()=>{$('#'+b.dataset.rv).classList.add('show');b.remove();});
+}
+
+/* ============ Stage 3: practice ============ */
+const PT=[
+ ()=>{const m=pick([0.8,1.2,1.5,2.4,3.0]),a=m*1e6/1440;return{q:`Peak hourly flow is <b>${m} MGD</b>. Convert to gallons per minute.`,a,u:'gpm',sol:`${m} × 1,000,000 ÷ 1,440 = ${fmt(a,0)} gpm`};},
+ ()=>{const V=pick([90000,150000,180000,240000]),Q=pick([600,750,900,1100,1400]),a=V/Q;return{q:`A clearwell holds <b>${fmt(V,0)} gal</b> at minimum level. Peak flow is <b>${Q} gpm</b>. Find HDT.`,a,u:'min',sol:`${fmt(V,0)} ÷ ${Q} = ${fmt(a,1)} min`};},
+ ()=>{const h=pick([60,80,96,120,150]),b=pick([[0.1,'unbaffled'],[0.3,'poor'],[0.5,'average'],[0.7,'superior']]),a=h*b[0];return{q:`HDT is <b>${h} min</b> and the basin is rated <b>${b[1]}</b>. Find T10.`,a,u:'min',sol:`${h} × ${b[0]} = ${fmt(a,1)} min`};},
+ ()=>{const C=pick([0.5,0.6,0.8,1.2,1.5]),t=pick([18,24,30,36,45]),a=C*t;return{q:`Outlet residual is <b>${C} mg/L</b> and T10 is <b>${t} min</b>. Calculate CT.`,a,u:'mg·min/L',sol:`${C} × ${t} = ${fmt(a,1)} mg·min/L`};},
+ ()=>{const C=pick([0.6,0.8,1.0]),t=pick([20,30,40]),f=pick([0.8,1.25]),req=Math.round(C*t*f);const pass=C*t>=req;return{q:`Residual <b>${C} mg/L</b>, T10 <b>${t} min</b>, CT required <b>${req}</b>. Does the plant comply?`,ch:['Pass','Fail'],a:pass?0:1,sol:`CT = ${fmt(C*t,1)}, which is ${pass?'≥':'<'} ${req}, so it ${pass?'passes':'fails'}.`};},
+ ()=>{const d=pick([1.5,2,2.5,3]),m=pick([0.75,1.2,2.0]),a=d*m*8.34;return{q:`Chlorine dose is <b>${d} mg/L</b> at <b>${m} MGD</b>. Find the feed rate.`,a,u:'lb/day',sol:`${d} × ${m} × 8.34 = ${fmt(a,1)} lb/day`};},
+ ()=>{const d=pick([2.0,2.5,3.0,3.2]),dm=pick([0.8,1.2,1.6]),a=d-dm;return{q:`You dose <b>${d} mg/L</b> and the water's chlorine demand is <b>${dm} mg/L</b>. Ignoring decay, what residual remains?`,a,u:'mg/L',sol:`${d} − ${dm} = ${fmt(a,1)} mg/L`};},
+ ()=>{const m=pick([0.12,0.25,0.4,1.5]),a=m*1e6;return{q:`Convert <b>${m} MG</b> (million gallons) to gallons.`,a,u:'gal',sol:`${m} × 1,000,000 = ${fmt(a,0)} gal`};},
+ ()=>{const c=pick([['A tank with no baffles where the inlet sits close to the outlet',0],['A basin with serpentine baffles and a perforated inlet baffle',2],['A basin with a baffled inlet and a few internal baffles',1]]);return{q:`Which baffling factor fits: <b>${c[0]}</b>?`,ch:['0.1 unbaffled','0.5 average','0.7 superior'],a:c[1],sol:'Match the physical layout to the EPA descriptions in the Learn stage.'};},
+ ()=>{const p=pick([6.5,7.0,7.5,8.0,8.5]),a=100/(1+Math.pow(10,p-7.5));return{q:`Using pKa = 7.5, what percentage of free chlorine is HOCl at <b>pH ${p}</b>?`,a,u:'%',tol:2,sol:`100 ÷ (1 + 10^(${p} − 7.5)) = ${fmt(a,0)}%`};}
+];
+let PR=null;
+function renderPractice(){
+  const el=$('#practice');
+  if(S.practice&&!PR){el.innerHTML=`<h3>Practice complete: ${S.practice}/10</h3><div class="row"><button class="btn ghost" id="prAgain">Practise again with new numbers</button><button class="btn" id="prGo">Continue to the challenge</button></div>`;$('#prAgain').onclick=()=>{PR={list:shuffle(PT).map(f=>f()),i:0,ok:0};showProb();};$('#prGo').onclick=()=>{unlock(4);go(4);};return;}
+  if(!PR)PR={list:shuffle(PT).map(f=>f()),i:0,ok:0};showProb();
+}
+function showProb(){
+  const el=$('#practice'),p=PR.list[PR.i];
+  el.innerHTML=`<div class="progress">Problem ${PR.i+1} of 10 · ${PR.ok} correct</div><div class="q">${p.q}</div>`+
+   (p.ch?`<div class="opts">${p.ch.map((c,k)=>`<button class="opt" data-k="${k}">${c}</button>`).join('')}</div>`:
+   `<div class="ansrow"><input type="text" inputmode="decimal" id="ans" aria-label="Your answer"><span style="color:var(--muted)">${p.u}</span><button class="btn" id="chk">Check</button></div>`)+`<div id="pfb"></div>`;
+  const done=ok=>{if(ok)PR.ok++;$('#pfb').innerHTML=`<div class="fb ${ok?'':'bad'}"><b>${ok?'Correct.':'Not quite.'}</b> ${p.sol}</div><button class="btn" id="pn" style="margin-top:12px">${PR.i<9?'Next problem':'Finish practice'}</button>`;
+    $('#pn').onclick=()=>{PR.i++;if(PR.i<10)showProb();else finishPractice();};};
+  if(p.ch)el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const k=+b.dataset.k,ok=k===p.a;el.querySelectorAll('.opt').forEach((x,j)=>{x.disabled=true;if(j===p.a)x.classList.add('right');});if(!ok)b.classList.add('wrong');done(ok);});
+  else{const f=()=>{const v=parseFloat($('#ans').value.replace(/,/g,''));if(isNaN(v)){$('#pfb').innerHTML='<div class="fb bad">Enter a number, for example 86.4</div>';return;}$('#ans').disabled=true;$('#chk').disabled=true;done(Math.abs(v-p.a)<=Math.max(Math.abs(p.a)*0.02,p.tol||0.01));};$('#chk').onclick=f;$('#ans').onkeydown=e=>{if(e.key==='Enter')f();};$('#ans').focus();}
+}
+function finishPractice(){
+  const sc=PR.ok;PR=null;S.practice=Math.max(S.practice||0,sc);award(sc>=8?'colorimeter':sc>=6?'gloves':'poop');unlock(4);
+  $('#practice').innerHTML=`<h3>${sc}/10</h3><p>${sc>=8?'Strong work. The colorimeter is yours.':'Keep going. You can practise again any time with new numbers.'}</p><div class="row"><button class="btn ghost" id="prAgain">Practise again</button><button class="btn" id="prGo">Continue to the challenge</button></div>`;
+  $('#prAgain').onclick=()=>{PR={list:shuffle(PT).map(f=>f()),i:0,ok:0};showProb();};$('#prGo').onclick=()=>go(4);
+}
+
+/* ============ Stage 4: challenge ============ */
+const CH={season:'spring',flow:'peak',level:'min',chart:null};
+const REASONS={
+ spring:{q:'Why did you choose this dose for Spring Snowmelt?',o:['Cold water slows disinfection, so I needed enough residual to meet a higher CT requirement','Snowmelt has high chlorine demand from organics','High pH made the chlorine weak','Warm pipes burn off residual quickly']},
+ summer:{q:'Why did you choose this dose for Summer Dry?',o:['Chlorine decays fast in warm water, so the dose must keep at least 0.2 mg/L at the first customer','Cold water slows disinfection','Storm organics use up the chlorine','Low alkalinity makes chlorine unstable']},
+ autumn:{q:'Why did you choose this dose for Autumn Rain?',o:['Organics raise chlorine demand and by-product risk, so I met CT with the smallest safe margin','Cold water needs the most CT','High pH means very little HOCl','Distribution decay is the main problem']}
+};
+function seasonOpen(k){const i=CONFIG.order.indexOf(k);return i===0||!!S.seasons[CONFIG.order[i-1]];}
+function renderChallenge(){
+  $('#logTxt').textContent=CONFIG.giardiaLog;
+  $('#seasonTabs').innerHTML=CONFIG.order.map(k=>`<button class="tab ${k===CH.season?'on':''} ${S.seasons[k]?'done':''}" data-s="${k}" ${seasonOpen(k)?'':'disabled'}>${CONFIG.seasons[k].name}</button>`).join('');
+  $$('[data-s]').forEach(b=>b.onclick=()=>{CH.season=b.dataset.s;if(S.seasons[CH.season])$('#dose').value=S.seasons[CH.season].dose;renderChallenge();});
+  const s=CONFIG.seasons[CH.season];
+  $('#seasonCard').innerHTML=`<div class="season-head"><h3 style="color:var(--text);margin:0">${s.name}</h3>${S.seasons[CH.season]?`<span class="status ${GRADES[S.seasons[CH.season].grade].cls}">${GRADES[S.seasons[CH.season].grade].t}</span>`:''}</div>
+   <div class="chips"><span class="chip num">${s.T} °C</span><span class="chip num">pH ${s.pH}</span><span class="chip num">Alkalinity ${s.alk} mg/L as CaCO₃</span><span class="chip num">Filtered ${s.ntu} NTU</span></div><p style="margin:0;color:var(--muted)">${s.blurb}</p>`;
+  updChallenge();
+}
+function updChallenge(){
+  const dose=+$('#dose').value,bf=+$('#bf').value;$('#doseV').textContent=dose.toFixed(1);
+  const r=model(CH.season,dose,CH.flow,CH.level,bf),g=grade(r),G=GRADES[g];
+  $('#hdt').textContent=fmt(r.hdt,1)+' min';$('#t10').textContent=fmt(r.t10,1)+' min';
+  $('#cOut').textContent=fmt(r.C,2)+' mg/L';$('#demandTxt').textContent=`demand ${r.s.demand} mg/L, then decay`;
+  $('#cCust').textContent=fmt(r.cust,2)+' mg/L';$('#cCust').style.color=r.cust<CONFIG.minCustomer?'var(--red)':'';
+  $('#ctCalc').textContent=fmt(r.ct,1);$('#ctReq').textContent=fmt(r.req,1);
+  $('#ctCalc').style.color=r.ratio>=1?'var(--green)':'var(--red)';
+  const chip=$('#statusChip');chip.className='status '+G.cls;chip.textContent=G.t;
+  const h=r.hocl*100;$('#gH').style.width=h+'%';$('#gO').style.width=(100-h)+'%';$('#gHv').textContent=fmt(h,0)+'%';$('#gOv').textContent=fmt(100-h,0)+'%';
+  const d=Math.min(r.dbp/10,1)*100,dc=r.dbp>CONFIG.dbpHigh?'var(--red)':r.dbp>CONFIG.dbpMod?'var(--gold)':'var(--green)';
+  $('#dbpBar').style.width=d+'%';$('#dbpBar').style.background=dc;$('#dbpTxt').textContent=r.dbp>CONFIG.dbpHigh?'High':r.dbp>CONFIG.dbpMod?'Moderate':'Low';
+  $('#feed').textContent=fmt(r.feed,1)+' lb/day';
+  const notes=[];if(CH.flow!=='peak')notes.push('peak flow');if(CH.level!=='min')notes.push('minimum level');if(bf!==CONFIG.plantBF)notes.push(`the plant's real baffling (${CONFIG.plantBF})`);
+  $('#viewNote').textContent=notes.length?`Exploring a what-if. Your decision will be judged at ${notes.join(', ')}.`:'';
+  drawDecay(r);
+}
+function drawDecay(r){
+  if(typeof Chart==='undefined')return;
+  const pts=[],end=r.hdt+CONFIG.travelMin;
+  for(let t=0;t<=end;t+=end/60){const c=t<=r.hdt?r.c0*Math.exp(-r.s.k*t):r.C*Math.exp(-r.s.kd*(t-r.hdt));pts.push({x:t,y:c});}
+  const ds=[{label:'Free chlorine residual',data:pts,borderColor:'#46c2a8',backgroundColor:'rgba(70,194,168,.12)',fill:true,pointRadius:0,tension:.2,borderWidth:2.5},
+    {label:'Minimum at customer (0.2)',data:[{x:0,y:.2},{x:end,y:.2}],borderColor:'#e06a5c',borderDash:[6,4],pointRadius:0,borderWidth:1.5},
+    {label:'Clearwell outlet',data:[{x:r.hdt,y:0},{x:r.hdt,y:Math.max(r.c0,1)}],borderColor:'#e3b341',borderDash:[3,3],pointRadius:0,borderWidth:1.5}];
+  if(CH.chart){CH.chart.data.datasets=ds;CH.chart.options.scales.x.max=end;CH.chart.update('none');return;}
+  CH.chart=new Chart($('#decayChart'),{type:'line',data:{datasets:ds},options:chartOpts({x:{type:'linear',title:'Minutes after dosing',max:end},y:{title:'mg/L',min:0}})});
+}
+function chartOpts(ax){
+  const axis=a=>({type:a.type,min:a.min,max:a.max,title:{display:true,text:a.title,color:'#8fb4cc',font:{family:'Lexend'}},grid:{color:'#1d3f55'},border:{color:'#23495f'},ticks:{color:'#5c8299',font:{family:'Lexend'}}});
+  return{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#dcefff',font:{family:'Lexend',size:11},boxWidth:14}},tooltip:{backgroundColor:'#12293a'}},scales:{x:axis(ax.x),y:axis(ax.y)}};
+}
+$('#dose').oninput=updChallenge;$('#level').onchange=e=>{CH.level=e.target.value;updChallenge();};$('#bf').onchange=updChallenge;
+$$('[data-flow]').forEach(b=>b.onclick=()=>{CH.flow=b.dataset.flow;$$('[data-flow]').forEach(x=>x.classList.toggle('on',x===b));updChallenge();});
+$('#submitBtn').onclick=()=>{
+  if(demo.on)return;
+  const k=CH.season,R=REASONS[k],opts=shuffle(R.o.map((t,i)=>({t,ok:i===0})));
+  modal(`<h3 style="color:var(--text)">Defend your dose: ${$('#dose').value} mg/L</h3><p>${R.q}</p><div class="opts">${opts.map((o,i)=>`<button class="opt" data-r="${i}">${o.t}</button>`).join('')}</div>`);
+  $$('[data-r]').forEach(b=>b.onclick=()=>decide(opts[+b.dataset.r].ok));
+};
+function decide(reasonOK){
+  const k=CH.season,dose=+$('#dose').value,r=model(k,dose,'peak','min',CONFIG.plantBF),g=grade(r),G=GRADES[g];
+  S.seasons[k]={dose,grade:g,reason:reasonOK,C:r.C,t10:r.t10,ct:r.ct,req:r.req,cust:r.cust,feed:r.feed,dbp:r.dbp};save();
+  const last=CONFIG.order.every(s=>S.seasons[s]);const nxt=CONFIG.order[CONFIG.order.indexOf(k)+1];
+  modal(`<div class="scene">${G.e}</div><h3 style="color:var(--text);text-align:center">${G.t}</h3><p>${G.txt}</p>
+   <div class="tscroll"><table><tr><td>CT calculated / required</td><td class="num">${fmt(r.ct,1)} / ${fmt(r.req,1)}</td></tr><tr><td>Residual at first customer</td><td class="num">${fmt(r.cust,2)} mg/L</td></tr><tr><td>By-product risk</td><td>${r.dbp>CONFIG.dbpHigh?'High':r.dbp>CONFIG.dbpMod?'Moderate':'Low'}</td></tr><tr><td>Your reasoning</td><td>${reasonOK?'✅ Sound':'❌ Not the key factor this season'}</td></tr></table></div>
+   <p style="font-size:.85rem;color:var(--dim);margin-top:10px">Judged at peak flow, minimum clearwell level and the plant's real baffling factor.</p>
+   <div class="row"><button class="btn ghost" id="mRetry">Adjust dose</button>${last?'<button class="btn" id="mNext">Compare all seasons</button>':nxt?`<button class="btn" id="mNext">Next: ${CONFIG.seasons[nxt].name}</button>`:''}</div>`);
+  $('#mRetry').onclick=()=>{closeModal();renderChallenge();};
+  const n=$('#mNext');if(n)n.onclick=()=>{closeModal();if(last){unlock(5);go(5);}else{CH.season=nxt;$('#dose').value=2.0;renderChallenge();}};
+}
+
+/* ============ Stage 5: compare ============ */
+let cmpChart=null;
+function renderCompare(){
+  const rows=CONFIG.order.map(k=>{const s=CONFIG.seasons[k],d=S.seasons[k];if(!d)return'';const G=GRADES[d.grade];
+    return`<tr><td>${s.name}</td><td class="num">${s.T} °C</td><td class="num">${s.pH}</td><td class="num">${fmt(hocl(s.pH,s.T)*100,0)}%</td><td class="num">${fmt(d.dose,1)}</td><td class="num">${fmt(d.C,2)}</td><td class="num">${fmt(d.t10,1)}</td><td class="num">${fmt(d.ct,1)}</td><td class="num">${fmt(d.req,1)}</td><td class="num">${fmt(d.cust,2)}</td><td class="num">${fmt(d.feed,1)}</td><td><span class="status ${G.cls}">${G.t}</span></td></tr>`;}).join('');
+  $('#cmpTable').innerHTML=`<table><tr><th>Season</th><th>Temp</th><th>pH</th><th>HOCl</th><th>Dose mg/L</th><th>C mg/L</th><th>T10 min</th><th>CT calc</th><th>CT req</th><th>Customer mg/L</th><th>Feed lb/day</th><th>Result</th></tr>${rows}</table>`;
+  const opt=CONFIG.order.filter(k=>S.seasons[k]&&S.seasons[k].grade==='optimised').length;
+  $('#cmpTardi').textContent=`You optimised ${opt} of 3 seasons. Notice the pattern: spring is limited by cold, summer by residual decay, and autumn by by-products. The same plant needs a different strategy every season.`;
+  if(opt>=2&&!S.items.tracer)award('tracer');
+  if(typeof Chart==='undefined')return;
+  const labels=CONFIG.order.map(k=>CONFIG.seasons[k].name);
+  const data={labels,datasets:[{label:'CT calculated',data:CONFIG.order.map(k=>S.seasons[k]?+S.seasons[k].ct.toFixed(1):0),backgroundColor:'#46c2a8'},{label:'CT required',data:CONFIG.order.map(k=>S.seasons[k]?+S.seasons[k].req.toFixed(1):0),backgroundColor:'#e06a5c'}]};
+  if(cmpChart){cmpChart.data=data;cmpChart.update();return;}
+  const o=chartOpts({x:{type:'category',title:'Season'},y:{title:'mg·min/L',min:0}});cmpChart=new Chart($('#cmpChart'),{type:'bar',data,options:o});
+}
+
+/* ============ Stage 6: final ============ */
+function renderFinal(){
+  const el=$('#finalQuiz');
+  const start=()=>runQuiz(el,shuffle(FINAL).slice(0,15),(sc,n)=>{
+    const pass=sc>=Math.ceil(n*0.7),top=sc>=13;
+    S.final=Math.max(S.final||0,sc);award(pass?'bottle':'poop');unlock(7);
+    el.innerHTML=`<div style="text-align:center"><div class="badge">${top?tardi(110):'🦠'}</div><h3 style="color:var(--text)">${sc}/${n} (${Math.round(sc/n*100)}%): ${top?'Tardigrade badge':'E. coli badge'}</h3>
+     <p style="margin:0 auto 6px"><span class="status ${pass?'st-opt':'st-bad'}">${pass?'Pass: at or above the 70% exam standard':'Below the 70% pass mark'}</span></p>
+     <p style="margin:8px auto 14px">${top?'Tough as a tardigrade. You know your CT.':pass?'You passed. Score 13 or more next time to earn the tardigrade badge.':'E. coli survived this round. Review the Learn stage and worked math, then try again.'}</p>
+     <div class="row" style="justify-content:center"><button class="btn ghost" id="fqAgain">Retake with new questions</button><button class="btn" id="fqGo">See training summary</button></div></div>`;
+    $('#fqAgain').onclick=start;$('#fqGo').onclick=()=>go(7);});
+  el.innerHTML=`<p>${S.final!=null?`Best score so far: <b>${S.final}/15</b>.`:`15 questions drawn from a bank of ${FINAL.length}, covering concepts and operator calculations.`}</p><button class="btn" id="fqStart">Start final quiz</button>`;
+  $('#fqStart').onclick=start;
+}
+
+/* ============ Stage 7: summary ============ */
+function renderSummary(){
+  const seas=CONFIG.order.map(k=>S.seasons[k]).filter(Boolean);
+  const dose=seas.length?seas.reduce((a,d)=>a+GRADES[d.grade].pts,0)/3:0;
+  const proc=(S.practice||0)*10;
+  const interp=seas.length?seas.filter(d=>d.reason).length/3*100:0;
+  const optim=seas.length?seas.filter(d=>d.grade==='optimised').length/3*100:0;
+  const m=(n,v,d)=>`<div class="meter"><div class="t"><span>${n}</span><span class="num">${fmt(v,0)}%</span></div><div class="g"><i style="width:${v}%"></i></div><div style="font-size:.78rem;color:var(--dim);margin-top:3px">${d}</div></div>`;
+  $('#summary').innerHTML=`<h3>Operator-readiness profile</h3>
+   ${m('Dose Selection',dose,'Quality of your seasonal dose decisions')}
+   ${m('Process Control',proc,'Practice accuracy on HDT, T10, CT and feed-rate math')}
+   ${m('Water Quality Interpretation',interp,'Reasoning about temperature, pH, decay and organics')}
+   ${m('Treatment Optimisation',optim,'Seasons where you met CT without wasting chlorine')}
+   <p style="margin-top:14px">Final quiz: <b>${S.final!=null?S.final+'/15':'not taken'}</b> · Equipment: <b>${Object.keys(S.items).length}/5</b> · 💩 ${S.poop}</p>`;
+}
+$('#resetBtn').onclick=()=>{if(!confirm('Clear your progress for this module and start again?'))return;S=fresh();save();renderShelf();CH.season='spring';$('#dose').value=2.0;go(0);};
+
+/* ============ Investor demo ============ */
+const demo={on:false,i:0,snap:null,hl:null};
+const TOUR=[
+ ['#seasonCard','Summer Dry: warm water at pH 8.1, carried straight over from the titration and jar test modules. One river, one continuous story.'],
+ ['#doseRow','The learner runs the plant: they set the chlorine dose, and every readout responds in real time.'],
+ ['#hoclBox','At pH 8.1 only about a quarter of the chlorine is the strong HOCl form. Learners see why their titration result matters.'],
+ ['#ctBox','The compliance moment: CT calculated against the EPA-based CT requirement, judged at worst-case flow.'],
+ ['#custBox','The twist: warm water burns chlorine fast. Passing CT isn\'t enough if the residual dies before the first customer.'],
+ ['#submitBtn','Learners must defend their dose, then see real consequences, from boil-water notices to taste complaints.']
+];
+function startTour(){
+  if(demo.on)return;demo.snap=JSON.stringify(S);demo.on=true;S.max=Math.max(S.max,4);S.seasons=Object.assign({},S.seasons,{spring:S.seasons.spring||{dose:2.1,grade:'optimised',reason:true,C:0,t10:0,ct:0,req:0,cust:0,feed:0,dbp:0}});
+  $('#shelf').classList.remove('show');CH.season='summer';CH.flow='peak';CH.level='min';$('#level').value='min';$('#bf').value='0.3';$$('[data-flow]').forEach(x=>x.classList.toggle('on',x.dataset.flow==='peak'));$('#dose').value=2.2;
+  go(4);demo.i=0;setTimeout(tourStep,300);
+}
+function tourStep(){
+  if(demo.hl)demo.hl.classList.remove('tour-hl');
+  if(demo.i>=TOUR.length){$('#bubble').classList.remove('show');investorCard();return;}
+  const [sel,txt]=TOUR[demo.i],el=$(sel);demo.hl=el;el.classList.add('tour-hl');el.scrollIntoView({block:'center',behavior:'smooth'});
+  $('#bubbleTxt').textContent=txt;$('#bubbleNext').textContent=demo.i===TOUR.length-1?'Finish':'Next';
+  setTimeout(()=>{const r=el.getBoundingClientRect(),b=$('#bubble');b.classList.add('show');const bh=b.offsetHeight,bw=b.offsetWidth;
+    let top=r.bottom+12;if(top+bh>innerHeight-10)top=Math.max(10,r.top-bh-12);
+    b.style.top=top+'px';b.style.left=Math.max(10,Math.min(innerWidth-bw-10,r.left))+'px';},450);
+}
+$('#bubbleNext').onclick=()=>{demo.i++;tourStep();};
+$('#bubbleEnd').onclick=()=>{demo.i=TOUR.length;tourStep();};
+function investorCard(){
+  modal(`<div style="text-align:center">${tardi(90)}</div><h3 style="color:var(--text);text-align:center">Mizuverse Labs</h3>
+  <p><b>Module 4 of an expandable platform</b> covering the treatment train: stock solutions, alkalinity titration, jar testing and now chlorine disinfection, all linked by the same seasonal source water.</p>
+  <p><b>The problem:</b> experienced water operators are retiring, and trainees need a safe place to practise lab and plant decisions before they touch real equipment.</p>
+  <p><b>The model:</b> one reusable simulation engine. New modules such as UV, ozone, chloramines and distribution can be built on the same structure.</p>
+  <button class="btn" id="demoClose">Close tour</button>`);
+  $('#demoClose').onclick=()=>{closeModal();S=JSON.parse(demo.snap);demo.on=false;renderShelf();go(Math.min(S.stage,S.max));};
+}
+
+/* ============ Pitch overview ============ */
+$('#pitchTardi').innerHTML=tardi(150);
+$('#overviewBtn').onclick=()=>{if(!demo.on)showPitch();};
+$('#pitchStart').onclick=()=>{S.seenPitch=true;save();go(Math.min(S.stage,S.max));};
+$('#pitchDemo').onclick=()=>{S.seenPitch=true;save();startTour();};
+
+/* ============ Boot ============ */
+renderShelf();renderSteps();
+if(S.seenPitch)go(Math.min(S.stage,S.max));else showPitch();
+if(location.hash==='#tour')setTimeout(startTour,400);
+</script>
+</body>
+</html>
